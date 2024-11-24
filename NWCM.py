@@ -105,17 +105,17 @@ class NWCM:
         if total_supply == total_demand:
             return supply, demand, cost_matrix, False
 
-        self.tableau_strings.append("The problem is unbalanced. Balancing it automatically...")
+        self.tableau_strings.append("el problema esta desbalanceado. Balanceandolo automaticamente...")
         self.tableau_strings.append("\n")
 
         if total_supply > total_demand:
-            self.tableau_strings.append("Adding dummy demand of " + str((total_supply - total_demand)) + ".")
+            self.tableau_strings.append("Agregando valor de demanda de " + str((total_supply - total_demand)) + ".")
             self.tableau_strings.append("\n")
             demand.append(total_supply - total_demand)
             for row in cost_matrix:
                 row.append(0)
         elif total_supply < total_demand:
-            self.tableau_strings.append("Adding dummy supply of " + str(total_demand - total_supply)+ ".")
+            self.tableau_strings.append("Agregando valor de oferta de " + str(total_demand - total_supply)+ ".")
             self.tableau_strings.append("\n")
             supply.append(total_demand - total_supply)
             cost_matrix.append([0] * len(demand))
