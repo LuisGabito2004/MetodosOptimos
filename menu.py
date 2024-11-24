@@ -4,6 +4,7 @@ from tkinter import messagebox
 from PIL import Image, ImageTk
 from NWCM import NWCM
 from costominimo import ejecutar_metodo_costo_minimo
+
 #from metodos import MetodoEsquinaNoroeste, MetodoAproximacionVogel, MetodoCostoMinimo 
 
 def create_table(rows, cols, metodo):
@@ -27,7 +28,6 @@ def create_table(rows, cols, metodo):
             data = []
             for row_entries in entries:
                 row_data = [entry.get() for entry in row_entries]
-
                 data.append(row_data)
             return data
         
@@ -46,7 +46,7 @@ def create_table(rows, cols, metodo):
                     # Implementar lógica para Aproximación de Vogel si existe
                     pass
                 elif metodo == "Metodo del Costo Minimo":
-                    ejecutar_metodo_costo_minimo(datos)  # Llama al método desde costominimo.py
+                    ejecutar_metodo_costo_minimo(datos, menu_inicio)  # Llama al método desde costominimo.py
             except Exception as e:
                 messagebox.showerror("Error", f"Ha ocurrido un error: {e}")
 

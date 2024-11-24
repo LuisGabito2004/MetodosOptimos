@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 
+
 def metodo_costo_minimo_gui(oferta, demanda, costos):
     """
     Implementa el Método de Costo Mínimo mostrando los pasos en una ventana de resultados de tkinter.
@@ -41,7 +42,7 @@ def metodo_costo_minimo_gui(oferta, demanda, costos):
     return resultados, costo_total
 
 
-def mostrar_resultados(resultados, costos, costo_total):
+def mostrar_resultados(resultados, costos, costo_total, menu_inicio):
     """
     Muestra los resultados paso a paso en una ventana gráfica usando tkinter.
     """
@@ -66,9 +67,10 @@ def mostrar_resultados(resultados, costos, costo_total):
 
     text_widget.insert("end", f"Costo total mínimo: {costo_total}\n")
     text_widget.configure(state="disabled")
+    back_button = tk.Button(result_window, text="Volver al Menú", command=lambda: [result_window.destroy(), menu_inicio()])
+    back_button.pack(pady=10)
 
-
-def ejecutar_metodo_costo_minimo(datos):
+def ejecutar_metodo_costo_minimo(datos, menu_inicio):
     """
     Ejecuta el Método de Costo Mínimo con los datos ingresados por el usuario.
     """
@@ -78,7 +80,7 @@ def ejecutar_metodo_costo_minimo(datos):
         costos = [[int(x) for x in row[:-1]] for row in datos[:-1]]
 
         resultados, costo_total = metodo_costo_minimo_gui(oferta, demanda, np.array(costos))
-        mostrar_resultados(resultados, np.array(costos), costo_total)
+        mostrar_resultados(resultados, np.array(costos), costo_total, menu_inicio)
     except Exception as e:
         messagebox.showerror("Error", f"Ha ocurrido un error: {e}")
 
