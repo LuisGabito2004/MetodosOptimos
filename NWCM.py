@@ -3,13 +3,16 @@ class NWCM:
         self.cost_matrix = cost_matrix
         self.original_supply = supply[:]
         self.original_demand = demand[:]
+        self.isNotBalanced = False
 
         # Storage for all tableau strings
         self.tableau_strings = []
 
+        self.original_supply, self.original_demand, self.cost_matrix, self.isNotBalanced = self.handle_unbalanced_problem(self.original_supply, self.original_demand, self.cost_matrix)
+
         # Perform the Northwest Corner Method
         self.allocation, self.final_demand, self.final_supply = self.northwest_corner_method(
-            cost_matrix, supply[:], demand[:]
+            self.cost_matrix, self.original_supply, self.original_demand
         )
 
         # Calculate the total cost
@@ -20,12 +23,14 @@ class NWCM:
         self.collect_results(self.result)
 
     def northwest_corner_method(self, cost_matrix, supply, demand):
-        iteration = 0
+        iteration = 1
         rows = len(supply)
         cols = len(demand)
         allocation = [[0] * cols for _ in range(rows)]
 
         i, j = 0, 0  # Start at the top-left corner
+
+        self.collect_tableau(allocation, supply[:], demand[:], 0)
 
         while i < rows and j < cols:
             # Allocate the minimum of supply and demand
@@ -48,7 +53,7 @@ class NWCM:
 
             # Collect intermediate tableau
             if i != rows and j != cols:
-                self.collect_tableau(allocation, supply, demand, iteration)
+                self.collect_tableau(allocation, supply[:], demand[:], iteration)
                 iteration += 1
 
         return allocation, demand, supply
@@ -93,6 +98,30 @@ class NWCM:
         # Join the tableau strings and add to the collection
         self.tableau_strings.append("\n".join(tableau_str))
 
+    def handle_unbalanced_problem(self, supply, demand, cost_matrix):
+        total_supply = sum(supply)
+        total_demand = sum(demand)
+
+        if total_supply == total_demand:
+            return supply, demand, cost_matrix, False
+
+        self.tableau_strings.append("The problem is unbalanced. Balancing it automatically...")
+        self.tableau_strings.append("\n")
+
+        if total_supply > total_demand:
+            self.tableau_strings.append("Adding dummy demand of " + str((total_supply - total_demand)) + ".")
+            self.tableau_strings.append("\n")
+            demand.append(total_supply - total_demand)
+            for row in cost_matrix:
+                row.append(0)
+        elif total_supply < total_demand:
+            self.tableau_strings.append("Adding dummy supply of " + str(total_demand - total_supply)+ ".")
+            self.tableau_strings.append("\n")
+            supply.append(total_demand - total_supply)
+            cost_matrix.append([0] * len(demand))
+    
+        return supply, demand, cost_matrix, True
+    
     def collect_results(self, result):
         self.tableau_strings.append(f"Costo de transporte total: {result}")
 

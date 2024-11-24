@@ -50,7 +50,7 @@ def create_table(rows, cols, metodo):
                 #resultado = MetodoCostoMinimo().resolver(datos)
                 return
             
-            show_final() #resultado
+            #show_final()
         
         button = tk.Button(frame, text="Siguiente", command=siguiente)
         button.grid(row=rows, columnspan=cols)
