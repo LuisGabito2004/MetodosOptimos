@@ -1,25 +1,20 @@
+import tkinter as tk
+from tkinter import messagebox
 import numpy as np
 import pandas as pd
 
-def mostrar_tabla(oferta, demanda, costos, asignaciones):
-    df = pd.DataFrame(costos, columns=[f"D{i+1}" for i in range(len(demanda))], 
-                      index=[f"F{i+1}" for i in range(len(oferta))])
-    df.loc[:, "Oferta"] = oferta
-    df.loc["Demanda"] = demanda + [""]
-    print("\nTabla actual:")
-    print(df)
-    print("\nAsignaciones:")
-    print(asignaciones if np.any(asignaciones > 0) else "Sin asignaciones")
-    print("-" * 40)
 
-def metodo_costo_minimo(oferta, demanda, costos):
+def metodo_costo_minimo_gui(oferta, demanda, costos):
+    """
+    Implementa el Método de Costo Mínimo mostrando los pasos en una ventana de resultados de tkinter.
+    """
     oferta = oferta.copy()
     demanda = demanda.copy()
     filas = len(oferta)
     columnas = len(demanda)
-    
     asignaciones = np.zeros((filas, columnas), dtype=int)
-    
+    resultados = []
+
     while np.sum(oferta) > 0 and np.sum(demanda) > 0:
         # Encontrar la celda con el costo mínimo
         min_val = float('inf')
@@ -37,52 +32,61 @@ def metodo_costo_minimo(oferta, demanda, costos):
         # Actualizar oferta y demanda
         oferta[fila] -= cantidad
         demanda[columna] -= cantidad
-        
-        # Mostrar tabla paso por paso
-        mostrar_tabla(oferta, demanda, costos, asignaciones)
-    
+
+        # Registrar el estado actual
+        resultados.append((oferta.copy(), demanda.copy(), asignaciones.copy()))
+
     # Calcular el costo total
     costo_total = np.sum(asignaciones * costos)
-    return asignaciones, costo_total
+    return resultados, costo_total
 
-# Solicitar datos al usuario
-def obtener_datos():
-    print("=== Método de Costo Mínimo ===")
-    n_fuentes = int(input("Ingrese el número de fuentes: "))
-    n_destinos = int(input("Ingrese el número de destinos: "))
-    
-    print("\nIngrese la oferta para cada fuente:")
-    oferta = []
-    for i in range(n_fuentes):
-        oferta.append(int(input(f"Oferta de F{i+1}: ")))
-    
-    print("\nIngrese la demanda para cada destino:")
-    demanda = []
-    for i in range(n_destinos):
-        demanda.append(int(input(f"Demanda de D{i+1}: ")))
-    
-    print("\nIngrese los costos de transporte:")
-    costos = []
-    for i in range(n_fuentes):
-        while True:
-            try:
-                fila_costos = list(map(int, input(f"Costos de F{i+1} a cada destino separados por espacios: ").split()))
-                if len(fila_costos) != n_destinos:
-                    print(f"Por favor, ingrese exactamente {n_destinos} costos.")
-                    continue
-                costos.append(fila_costos)
-                break
-            except ValueError:
-                print("Por favor, ingrese valores numéricos válidos separados por espacios.")
-    
-    return oferta, demanda, np.array(costos)
 
-# Programa principal
-if __name__ == "__main__":
-    oferta, demanda, costos = obtener_datos()
-    asignaciones, costo_total = metodo_costo_minimo(oferta, demanda, costos)
-    
-    print("\n=== Resultado Final ===")
-    mostrar_tabla([0]*len(oferta), [0]*len(demanda), costos, asignaciones)
-    print(f"Costo total mínimo: {costo_total}")
+def mostrar_resultados(resultados, costos, costo_total):
+    """
+    Muestra los resultados paso a paso en una ventana gráfica usando tkinter.
+    """
+    result_window = tk.Toplevel()
+    result_window.title("Resultados del Método de Costo Mínimo")
+    result_window.geometry("800x600")
+
+    text_widget = tk.Text(result_window, wrap="word", font=("Courier New", 12))
+    text_widget.pack(expand=True, fill="both", padx=10, pady=10)
+
+    for i, (oferta, demanda, asignaciones) in enumerate(resultados):
+        text_widget.insert("end", f"=== Paso {i + 1} ===\n")
+        df = pd.DataFrame(costos, columns=[f"D{i+1}" for i in range(costos.shape[1])], 
+                          index=[f"F{i+1}" for i in range(costos.shape[0])])
+        df.loc[:, "Oferta"] = oferta
+        df.loc["Demanda"] = demanda + [""]
+
+        text_widget.insert("end", f"{df}\n")
+        text_widget.insert("end", "Asignaciones:\n")
+        text_widget.insert("end", f"{pd.DataFrame(asignaciones)}\n")
+        text_widget.insert("end", "-" * 40 + "\n\n")
+
+    text_widget.insert("end", f"Costo total mínimo: {costo_total}\n")
+    text_widget.configure(state="disabled")
+
+
+def ejecutar_metodo_costo_minimo(datos):
+    """
+    Ejecuta el Método de Costo Mínimo con los datos ingresados por el usuario.
+    """
+    try:
+        demanda = [int(x) for x in datos[-1][:-1]]
+        oferta = [int(row[-1]) for row in datos[:-1] if row]
+        costos = [[int(x) for x in row[:-1]] for row in datos[:-1]]
+
+        resultados, costo_total = metodo_costo_minimo_gui(oferta, demanda, np.array(costos))
+        mostrar_resultados(resultados, np.array(costos), costo_total)
+    except Exception as e:
+        messagebox.showerror("Error", f"Ha ocurrido un error: {e}")
+
+
+# Conectar esta función al menú principal
+def show_inputs_costo_minimo():
+    """
+    Configura la ventana de inputs para el Método de Costo Mínimo.
+    """
+    show_inputs("Metodo del Costo Minimo")
 
