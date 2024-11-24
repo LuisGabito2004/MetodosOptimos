@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
+from tkinter import scrolledtext
 from PIL import Image, ImageTk
 from NWCM import NWCM
 from costominimo import ejecutar_metodo_costo_minimo
@@ -20,14 +21,40 @@ def create_table(rows, cols, metodo):
             row_entries = []
             for c in range(cols):
                 entry = tk.Entry(frame)
-                entry.grid(row=r, column=c)
+                entry.grid(row=r+1, column=c+1)  # Ajustar la posición de las entradas
                 row_entries.append(entry)
             entries.append(row_entries)
+        
+        # Añadir labels de "Demanda" y números de fila
+        for r in range(rows):
+            label = tk.Label(frame, text=str(r), bg='white')
+            label.grid(row=r, column=0)  # Ajustar la posición de los labels de fila
+        
+        demanda_label = tk.Label(frame, text="Demanda", bg='white')
+        demanda_label.grid(row=rows, column=0)  # Ajustar la posición del label "Demanda"
+
+        # Añadir labels de "Oferta" y números de columna
+        for c in range(cols):
+            label = tk.Label(frame, text=str(c), bg='white')
+            label.grid(row=0, column=c)  # Ajustar la posición de los labels de columna
+        
+        oferta_label = tk.Label(frame, text="Oferta", bg='white')
+        oferta_label.grid(row=0, column=cols)  # Ajustar la posición del label "Oferta"
         
         def get_data():
             data = []
             for row_entries in entries:
-                row_data = [entry.get() for entry in row_entries]
+                row_data = []
+                for entry in row_entries:
+                    value = entry.get()
+                    try:
+                        value = float(value)
+                        if value < 0:
+                            raise ValueError("Negative value")
+                    except ValueError:
+                        messagebox.showerror("Error", "Valor no válido")
+                        return None
+                    row_data.append(value)
                 data.append(row_data)
             return data
         
@@ -51,7 +78,7 @@ def create_table(rows, cols, metodo):
                 messagebox.showerror("Error", f"Ha ocurrido un error: {e}")
 
         button = tk.Button(frame, text="Siguiente", command=siguiente)
-        button.grid(row=rows, columnspan=cols)
+        button.grid(row=rows+2, columnspan=cols+2)
 
     return show_table
 
@@ -138,7 +165,7 @@ def menu_inicio():
     bg_label.place(x=0, y=0, relwidth=1, relheight=1)
 
     # titulo en el centro
-    title_label = tk.Label(root, text="Menu de Metodos", font=("Arial", 24), bg='white')
+    title_label = tk.Label(root, text="Menú de Metodos", font=("Arial", 24), bg='white')
     title_label.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
 
     frame = tk.Frame(root, bg="#1B1D50")
