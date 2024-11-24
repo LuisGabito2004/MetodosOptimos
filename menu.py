@@ -4,6 +4,8 @@ from tkinter import messagebox
 from tkinter import scrolledtext
 from PIL import Image, ImageTk
 from NWCM import NWCM
+from costominimo import ejecutar_metodo_costo_minimo
+
 #from metodos import MetodoEsquinaNoroeste, MetodoAproximacionVogel, MetodoCostoMinimo 
 
 def create_table(rows, cols, metodo):
@@ -57,28 +59,24 @@ def create_table(rows, cols, metodo):
             return data
         
         def siguiente():
-            datos = get_data() #Matrix complete
+            datos = get_data()  # Matriz completa
+            try:
+                # Lógica de procesamiento común
+                demand = [int(x) for x in datos[-1][:-1]]
+                supply = [int(row[-1]) for row in datos[:-1] if row]
+                cost_matrix = [[int(x) for x in row[:-1]] for row in datos[:-1]]
 
-            #get each element from the data and convert them in to integers
-            demand = [int(x) for x in datos[-1][:-1]]
-            supply = [int(row[-1]) for row in datos[:-1] if row]
-            cost_matrix = [[int(x) for x in row[:-1]] for row in datos[:-1]]
+                if metodo == "Metodo Esquina Noroeste":
+                    result = NWCM(cost_matrix, supply, demand).get_result()
+                    show_final(result)
+                elif metodo == "Metodo por Aproximación de Vogel":
+                    # Implementar lógica para Aproximación de Vogel si existe
+                    pass
+                elif metodo == "Metodo del Costo Minimo":
+                    ejecutar_metodo_costo_minimo(datos, menu_inicio)  # Llama al método desde costominimo.py
+            except Exception as e:
+                messagebox.showerror("Error", f"Ha ocurrido un error: {e}")
 
-
-            print(datos)
-            if metodo == "Metodo Esquina Noroeste":
-                result = NWCM(cost_matrix, supply, demand).get_result()
-                show_final(result)
-                return
-            elif metodo == "Metodo por Aproximación de Vogel":
-                #resultado = MetodoAproximacionVogel().resolver(datos)
-                return
-            elif metodo == "Metodo del Costo Minimo":
-                #resultado = MetodoCostoMinimo().resolver(datos)
-                return
-            
-            #show_final()
-        
         button = tk.Button(frame, text="Siguiente", command=siguiente)
         button.grid(row=rows+2, columnspan=cols+2)
 
