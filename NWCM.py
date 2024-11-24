@@ -1,30 +1,36 @@
-import numpy as np
-
 class NWCM:
     def __init__(self, cost_matrix, supply, demand):
         self.cost_matrix = cost_matrix
         self.original_supply = supply[:]
         self.original_demand = demand[:]
+        self.isNotBalanced = False
+
+        # Storage for all tableau strings
+        self.tableau_strings = []
+
+        self.original_supply, self.original_demand, self.cost_matrix, self.isNotBalanced = self.handle_unbalanced_problem(self.original_supply, self.original_demand, self.cost_matrix)
 
         # Perform the Northwest Corner Method
         self.allocation, self.final_demand, self.final_supply = self.northwest_corner_method(
-            cost_matrix, supply[:], demand[:]
+            self.cost_matrix, self.original_supply, self.original_demand
         )
 
         # Calculate the total cost
         self.result = self.calculate_total_cost(self.allocation, self.cost_matrix)
 
         # Print the final allocation matrix
-        self.printTableus(self.allocation, self.final_supply, self.final_demand, "Final Tableu")
-        self.printResults(self.result)
+        self.collect_tableau(self.allocation, self.final_supply, self.final_demand, "Tabla Final")
+        self.collect_results(self.result)
 
     def northwest_corner_method(self, cost_matrix, supply, demand):
-        iteration = 0
+        iteration = 1
         rows = len(supply)
         cols = len(demand)
         allocation = [[0] * cols for _ in range(rows)]
 
         i, j = 0, 0  # Start at the top-left corner
+
+        self.collect_tableau(allocation, supply[:], demand[:], 0)
 
         while i < rows and j < cols:
             # Allocate the minimum of supply and demand
@@ -45,9 +51,9 @@ class NWCM:
                 i += 1
                 j += 1  # Move diagonally to the next source and destination
 
-            # Print intermediate tableau
-            if(i != rows and j != cols):
-                self.printTableus(allocation, supply, demand, iteration)
+            # Collect intermediate tableau
+            if i != rows and j != cols:
+                self.collect_tableau(allocation, supply[:], demand[:], iteration)
                 iteration += 1
 
         return allocation, demand, supply
@@ -68,40 +74,57 @@ class NWCM:
 
         return total_cost_operation + " = " + str(total_cost)
 
-    def printTableus(self, tableau, supply, demand, iteration="Final Tableau"):
-        print(f"Iteration #{iteration}")
+    def collect_tableau(self, tableau, supply, demand, iteration="Tabla Final"):
         rows = len(tableau)
         cols = len(tableau[0])
 
-        # Print the column headers with "Supply" at the end
-        print(" " * (cols * 6 + 3) + "    Supply")
+        tableau_str = []
+        tableau_str.append(f"Iteracion #{iteration}")
+        tableau_str.append(" " * (cols * 6 + 3) + "    Oferta")
 
-        # Print each row with supply at the end
         for i in range(rows):
-            print(f"{i + 1:2} |", end="")  # Row label with alignment
+            row_str = f"{i + 1:2} |"
             for j in range(cols):
-                print(f"{tableau[i][j]:6}", end="")  # Align matrix values
-            print(f" {(supply[i] if i < len(supply) else 0):6}")  # Current supply value
+                row_str += f"{tableau[i][j]:6}"
+            row_str += f" {(supply[i] if i < len(supply) else 0):6}"
+            tableau_str.append(row_str)
 
-        # Print the demand row at the bottom
-        print("Demand", end=" ")
-        for j in range(cols):  # Match tableau's column count
-            print(f"{(demand[j] if j < len(demand) else 0):6}", end="")  # Align demand values
-        print("\n")
+        demand_str = "Dem." + "".join(
+            f"{(demand[j] if j < len(demand) else 0):6}" for j in range(cols)
+        )
+        tableau_str.append(demand_str)
+        tableau_str.append("\n")
 
+        # Join the tableau strings and add to the collection
+        self.tableau_strings.append("\n".join(tableau_str))
 
-    def printResults(self, result):
-        print("Total Transportation Cost:", result)
+    def handle_unbalanced_problem(self, supply, demand, cost_matrix):
+        total_supply = sum(supply)
+        total_demand = sum(demand)
 
+        if total_supply == total_demand:
+            return supply, demand, cost_matrix, False
 
-# Example Input
-cost_matrix = [
-    [12, 13, 4, 6],
-    [6, 4, 10, 11],
-    [10, 9, 12, 4]
-]
+        self.tableau_strings.append("el problema esta desbalanceado. Balanceandolo automaticamente...")
+        self.tableau_strings.append("\n")
 
-supply = [500, 700, 800]  # Supply for each source
-demand = [400, 900, 200, 500]  # Demand for each destination
+        if total_supply > total_demand:
+            self.tableau_strings.append("Agregando valor de demanda de " + str((total_supply - total_demand)) + ".")
+            self.tableau_strings.append("\n")
+            demand.append(total_supply - total_demand)
+            for row in cost_matrix:
+                row.append(0)
+        elif total_supply < total_demand:
+            self.tableau_strings.append("Agregando valor de oferta de " + str(total_demand - total_supply)+ ".")
+            self.tableau_strings.append("\n")
+            supply.append(total_demand - total_supply)
+            cost_matrix.append([0] * len(demand))
+    
+        return supply, demand, cost_matrix, True
+    
+    def collect_results(self, result):
+        self.tableau_strings.append(f"Costo de transporte total: {result}")
 
-NWCM(cost_matrix, supply, demand)
+    def get_result(self):
+        # Return all tableaus and the result as a single string
+        return "\n".join(self.tableau_strings)

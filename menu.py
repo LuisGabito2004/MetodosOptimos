@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from PIL import Image, ImageTk
+from NWCM import NWCM
 #from metodos import MetodoEsquinaNoroeste, MetodoAproximacionVogel, MetodoCostoMinimo 
 
 def create_table(rows, cols, metodo):
@@ -25,14 +26,22 @@ def create_table(rows, cols, metodo):
             data = []
             for row_entries in entries:
                 row_data = [entry.get() for entry in row_entries]
-                data.append(row_data)
+                data.append(row_data)            
             return data
         
         def siguiente():
-            datos = get_data()
+            datos = get_data() #Matrix complete
+
+            #get each element from the data and convert them in to integers
+            demand = [int(x) for x in datos[-1][:-1]]
+            supply = [int(row[-1]) for row in datos[:-1] if row]
+            cost_matrix = [[int(x) for x in row[:-1]] for row in datos[:-1]]
+
+
             print(datos)
             if metodo == "Metodo Esquina Noroeste":
-                # = MetodoEsquinaNoroeste().resolver(datos)
+                result = NWCM(cost_matrix, supply, demand).get_result()
+                show_final(result)
                 return
             elif metodo == "Metodo por Aproximación de Vogel":
                 #resultado = MetodoAproximacionVogel().resolver(datos)
@@ -41,7 +50,7 @@ def create_table(rows, cols, metodo):
                 #resultado = MetodoCostoMinimo().resolver(datos)
                 return
             
-            show_final() #resultado
+            #show_final()
         
         button = tk.Button(frame, text="Siguiente", command=siguiente)
         button.grid(row=rows, columnspan=cols)
@@ -51,15 +60,36 @@ def create_table(rows, cols, metodo):
 def show_final(resultado):
     for widget in root.winfo_children():
         widget.destroy()
-    
-    frame = tk.Frame(root, bg='white')
-    frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
-    
-    label = tk.Label(frame, text=resultado, font=("Arial", 12), bg='white')
-    label.pack(pady=10)
-    
-    button = tk.Button(frame, text="Back", width=20, command=menu_inicio)
-    button.pack(pady=10)
+
+    # Create a container frame
+    container = tk.Frame(root, bg='white')
+    container.place(relx=0.5, rely=0.5, anchor=tk.CENTER, relwidth=0.8, relheight=0.8)
+
+    # Create a canvas and a scrollbar for scrolling
+    canvas = tk.Canvas(container, bg='white')
+    scrollbar = tk.Scrollbar(container, orient="vertical", command=canvas.yview)
+    canvas.configure(yscrollcommand=scrollbar.set)
+
+    # Create a frame inside the canvas to hold content
+    content_frame = tk.Frame(canvas, bg='white')
+    canvas.create_window((0, 0), window=content_frame, anchor="nw")
+
+    # Pack the canvas and scrollbar
+    canvas.pack(side="left", fill="both", expand=True)
+    scrollbar.pack(side="right", fill="y")
+
+    # Add content to the content_frame
+    lines = resultado.split("\n")  # Split the result into lines
+    for line in lines:
+        label = tk.Label(content_frame, text=line, font=("Courier New", 12), bg='white', justify="center")
+        label.pack(anchor="w", padx=20)  # Left-aligned for uniformity
+
+    # Add the back button at the bottom
+    button = tk.Button(content_frame, text="Back", width=20, command=menu_inicio)
+    button.pack(pady=20)
+
+    # Adjust the canvas scrollregion dynamically
+    content_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
 
 def show_inputs(metodo):
     for widget in root.winfo_children():
