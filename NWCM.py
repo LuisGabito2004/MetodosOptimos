@@ -130,5 +130,8 @@ class NWCM:
         return "\n".join(self.tableau_strings)
     
     def get_ToOptimize(self):
+        allocations = self.allocation
+        num_allocations = sum(element != 0 for row in allocations for element in row) 
         #return final answers
-        return self.final_demand, self.final_supply, self.allocation
+        return allocations, self.cost_matrix, num_allocations
+

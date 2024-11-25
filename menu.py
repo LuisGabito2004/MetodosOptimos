@@ -4,9 +4,15 @@ from tkinter import messagebox
 from tkinter import scrolledtext
 from PIL import Image, ImageTk
 from NWCM import NWCM
-from costominimo import ejecutar_metodo_costo_minimo
+from costominimo import ejecutar_metodo_costo_minimo, metodo_costo_minimo_gui, return_string_results
 from mav.init import MAV
+from dimo.init import DIMO
 #from metodos import MetodoEsquinaNoroeste, MetodoAproximacionVogel, MetodoCostoMinimo 
+
+# variables used for dimo method
+matrix_cost = []
+matrix_allocations = []
+num_allocations = 0
 
 def create_table(rows, cols, metodo):
     def show_table():
@@ -84,6 +90,9 @@ def create_table(rows, cols, metodo):
 
         
         def siguiente():
+            # vairiables used for dimo method initialize as global to pass data trou the method
+            global matrix_cost, matrix_allocations, num_allocations
+
             datos = get_data()  # Matriz completa
             print(datos)
             try:
@@ -93,7 +102,9 @@ def create_table(rows, cols, metodo):
                 cost_matrix = [[int(x) for x in row[:-1]] for row in datos[:-1]]
 
                 if metodo == "Metodo Esquina Noroeste":
-                    result = NWCM(cost_matrix, supply, demand).get_result()
+                    nwcm = NWCM(cost_matrix, supply, demand)
+                    result = nwcm.get_result()
+                    matrix_allocations, matrix_cost, num_allocations = nwcm.get_ToOptimize()
                     show_final(result, metodo)
                 elif metodo == "Metodo por Aproximación de Vogel":
                     # Implementar lógica para Aproximación de Vogel si existe
@@ -115,9 +126,16 @@ def create_table(rows, cols, metodo):
                         else:
                             mav.resultString += f"Failed to solve: {result}" + "\n"
 
+                    matrix_allocations, matrix_cost, num_allocations = mav.get_matrix_parsed()
                     show_final(mav.resultString, metodo)
                 elif metodo == "Metodo del Costo Minimo":
-                    ejecutar_metodo_costo_minimo(datos, menu_inicio)  # Llama al método desde costominimo.py
+                    results, _ = metodo_costo_minimo_gui(supply, demand, cost_matrix)
+                    matrix_allocations = results[-1][2].tolist()
+                    matrix_cost = cost_matrix
+                    num_allocations = sum(element != 0 for row in matrix_allocations for element in row)  
+
+                    string_results = ejecutar_metodo_costo_minimo(datos, menu_inicio)
+                    show_final(string_results, metodo)
             except Exception as e:
                 messagebox.showerror("Error", f"Ha ocurrido un error: {e}")
 
@@ -168,7 +186,7 @@ def show_final(resultado, metodo):
     button1 = tk.Button(content_frame, text="Método Banquillo", font=("Arial", 12), bg="#4CAF50", fg='white', width=40, bd=0, command=lambda: ejecutar_metodoOptimo(metodo))
     button1.pack(pady=10)
 
-    button2 = tk.Button(content_frame, text="Método DIMO", font=("Arial", 12), bg="#F44336", fg='white', width=40, bd=0, command=lambda: ejecutar_metodoOptimo(metodo))
+    button2 = tk.Button(content_frame, text="Método DIMO", font=("Arial", 12), bg="#F44336", fg='white', width=40, bd=0, command=lambda: ejecutar_metodoOptimo("dimo"))
     button2.pack(pady=10)
 
     # Adjust the canvas scrollregion dynamically
@@ -182,12 +200,28 @@ def show_final(resultado, metodo):
 
 
 def ejecutar_metodoOptimo(metodo):
+    # vairiables used for dimo method initialize as global to pass data trou the method
+    global matrix_cost, matrix_allocations, num_allocations
+
     print(metodo)
-    if metodo == "metodo1":
-        resultado = 0
+    if metodo == "dimo":
+        dimo = DIMO(matrix_cost, matrix_allocations, num_allocations)
+        optimal_allocation, optimal_cost = dimo.solve()
+        
+        if optimal_allocation is not None:
+            dimo.resultString += "\nFinal Optimal Allocation:" + "\n"
+            print("\nFinal Optimal Allocation:")
+            dimo.print_tableau()
+            dimo.print_total_cost()
+        else:
+            dimo.resultString += "No solution exists" + "\n"
+            print("No solution exists")
+
+        show_final(dimo.resultString, "")
+
     elif metodo == "metodo2":
         resultado = 0
-    show_final(resultado, metodo)
+        show_final(resultado, metodo)
 
 def show_inputs(metodo):
     for widget in root.winfo_children():

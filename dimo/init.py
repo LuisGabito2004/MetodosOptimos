@@ -1,4 +1,3 @@
-
 import sys
 from typing import List, Tuple, Optional
 
@@ -25,21 +24,20 @@ class DIMO:
 
     def print_tableau(self) -> None:
         """Print the current tableau showing costs, allocations, u/v values, and deltas""" 
+        col_width = 12  # Increased width to accommodate larger numbers
+        
         # Print column headers with v values
-        print("", end="\t")
-        self.resultString += "" + "\t"
+        header = "".ljust(col_width)
         for j in range(self.num_cols):
             v_val = f"{self.v_values[j]:.0f}" if self.v_values and self.v_values[j] is not None else "N/A"
-            self.resultString += f"v={v_val}" + "\t"
-            print(f"v={v_val}", end="\t")
-        self.resultString += "" + "\n"
-        print()
+            header += f"v={v_val}".ljust(col_width)
+        self.resultString += header + "\n"
+        print(header)
         
         # Print costs, allocations and u values
         for i in range(self.num_rows):
             u_val = f"{self.u_values[i]:.0f}" if self.u_values and self.u_values[i] is not None else "N/A"
-            self.resultString += f"u={u_val}" + "\t"
-            print(f"u={u_val}", end="\t")
+            row = f"u={u_val}".ljust(col_width)
             for j in range(self.num_cols):
                 cost = self.cost_matrix[i][j]
                 alloc = self.allocation_matrix[i][j]
@@ -47,46 +45,47 @@ class DIMO:
                     alloc_str = "ε"
                 else:
                     alloc_str = f"{alloc:.0f}" if alloc > 0 else "0"
-                self.resultString += f"{alloc_str}({cost})" + "\t"
-                print(f"{alloc_str}({cost})", end="\t")
-            self.resultString += "" + "\n"
-            print()
+                cell = f"{alloc_str}({cost})".ljust(col_width)
+                row += cell
+            self.resultString += row + "\n"
+            print(row)
 
         # Print deltas for unallocated cells
         if self.deltas:
-            # Print column headers with v values
-            self.resultString += "\nDelta Values (unallocated cells only): " + "\n"
+            self.resultString += "\nDelta Values (unallocated cells only):\n"
             print("\nDelta Values (unallocated cells only):")
-            self.resultString += "index" + "\t"
-            print("index", end="\t")
+            
+            # Header row for deltas
+            delta_header = "index".ljust(col_width)
             for j in range(self.num_cols):
-                jj = f"{j}"
-                self.resultString += f"{jj}" + "\t"
-                print(jj, end="\t")
-            self.resultString += f"" + "\n"
-            print()
+                delta_header += str(j).ljust(col_width)
+            self.resultString += delta_header + "\n"
+            print(delta_header)
 
+            # Delta values
             for i in range(self.num_rows):
-                ii = f"{i}"
-                self.resultString += f"{i}" + "\t"
-                print(ii, end="\t")
+                delta_row = str(i).ljust(col_width)
                 for j in range(self.num_cols):
                     if self.deltas[i][j] is not None:
-                        self.resultString += f"{self.deltas[i][j]}" + "\t"
-                        print(f"{self.deltas[i][j]}", end="\t")
+                        delta_val = f"{self.deltas[i][j]}".ljust(col_width)
                     else:
-                        self.resultString += f"0" + "\t"
-                        print("0", end="\t")
-                print()
+                        delta_val = "0".ljust(col_width)
+                    delta_row += delta_val
+                self.resultString += delta_row + "\n"
+                print(delta_row)
+            print()
 
         # Print current total cost
         self.calculate_total_cost()
         
         if self.is_degenerate():
-            self.resultString += f"Status: Solution is degenerate" + "\n"
-            print("Status: Solution is degenerate")
-        self.resultString += f"{"=" * 40}" + "\n"
-        print("=" * 40)
+            status = "Status: Solution is degenerate"
+            self.resultString += status + "\n"
+            print(status)
+        
+        separator = "=" * 40
+        self.resultString += separator + "\n"
+        print(separator)
 
     def is_degenerate(self) -> bool:
         """Check if the current solution is degenerate"""

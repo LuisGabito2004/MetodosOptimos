@@ -21,6 +21,7 @@ class MAV:
         self.rowsIgnored = []
         self.penaltiesRow, self.penaltiesColumn = self.calc_penalties()
         self.resultString = ""
+        self.totalCost = 0.0
 
     def calc_penalties(self) -> Tuple[List[int], List[int]]:
         penaltiesRow = [0] * self.origin
@@ -90,6 +91,7 @@ class MAV:
 
         formula = "\nCost: " + formula[:-3] + " = " + f"{cost}"
         self.resultString += formula
+        self.totalCost = cost
         print(formula)
 
 
@@ -127,48 +129,46 @@ class MAV:
         return True, "Problem is feasible"
 
     def print_tableau(self):
-       # Print the table header
-       self.resultString += "{:^{width}}".format("Destinations", width=self.destination * 10 + 10) + "\n"
-       print("{:^{width}}".format("", width=self.destination * 10 + 10))
-       self.resultString += "Origin" + "\t"
-       print("Origin", end="\t")
-       for i in range(1, self.destination + 1):
-           self.resultString += f"{i}" + "\t"
-           print(f"{i}", end="\t")
-       self.resultString += "Offer" + "\t"
-       print("Offer", end="\t")
-       self.resultString += "Pen" + "\n"
-       print("Pen")
+        # Define a consistent column width
+        col_width = 10
+        
+        # Print the table header with consistent spacing
+        header = "\nDestinations".center((self.destination * col_width) + 10)
+        self.resultString += header + "\n"
+        print(header)
+        
+        # Print column headers with fixed width
+        header_row = "Origin".ljust(col_width)
+        for i in range(1, self.destination + 1):
+            header_row += str(i).ljust(col_width)
+        header_row += "Offer".ljust(col_width) + "Pen"
+        self.resultString += header_row + "\n"
+        print(header_row)
 
-       # Print the table rows
-       for i in range(self.origin):
-           self.resultString += f"{i + 1}" + "\t"
-           print(i + 1, end="\t")
-           for j in range(self.destination):
-               self.resultString += f"{self.matrix[i][j][0]}﹂{self.matrix[i][j][1]}" + "\t"
-               print(f"{self.matrix[i][j][0]}({self.matrix[i][j][1]})", end="\t")
-           self.resultString += f"{self.offer[i]}" + "\t"
-           print(self.offer[i], end="\t")
-           self.resultString += f"{self.penaltiesRow[i]}" + "\n"
-           print(self.penaltiesRow[i])
+        # Print the table rows with consistent spacing
+        for i in range(self.origin):
+            row = str(i + 1).ljust(col_width)
+            for j in range(self.destination):
+                cell = f"{self.matrix[i][j][0]}({self.matrix[i][j][1]})".ljust(col_width)
+                row += cell
+            row += str(self.offer[i]).ljust(col_width) + str(self.penaltiesRow[i])
+            self.resultString += row + "\n"
+            print(row)
 
-       # Print the table footer
-       self.resultString += "Demand" + "\t"
-       print("Demand", end="\t")
-       for i in range(self.destination):
-           self.resultString += f"{self.demand[i]}" + "\t"
-           print(self.demand[i], end="\t")
-       self.resultString += "\n"
-       print()
+        # Print the demand row with consistent spacing
+        demand_row = "Demand".ljust(col_width)
+        for d in self.demand:
+            demand_row += str(d).ljust(col_width)
+        self.resultString += demand_row + "\n"
+        print(demand_row)
 
-       # Print the Penalties footer
-       self.resultString += "Pen" + "\t"
-       print("Pen", end="\t")
-       for i in range(self.destination):
-           self.resultString += f"{self.penaltiesColumn[i]}" + "\t"
-           print(self.penaltiesColumn[i], end="\t")
-       self.resultString += "\n"
-       print()
+        # Print the penalties row with consistent spacing
+        pen_row = "Pen".ljust(col_width)
+        for p in self.penaltiesColumn:
+            pen_row += str(p).ljust(col_width)
+        self.resultString += pen_row + "\n"
+        print(pen_row)
+        print()  # Add blank line for readability
 
     def solve_vogel(self):
         iteration = 0
@@ -284,6 +284,22 @@ class MAV:
         except Exception as e:
             return False, f"Error solving problem: {str(e)}"
 
+    def get_matrix_parsed(self) -> Tuple[List[List[int]], List[List[int]], int]:
+        allocations = []
+        costs = []
+        for row in self.matrix:
+            rowAllocations = []
+            rowCosts = []
+            for allocation, cost in row:
+                rowAllocations.append(allocation)
+                rowCosts.append(cost)
+            allocations.append(rowAllocations)
+            costs.append(rowCosts)
+
+        num_allocations = sum(element != 0 for row in allocations for element in row)
+
+        return allocations, costs, num_allocations
+
 if __name__ == '__main__':
     # EXAMPLE GETTED FROM CLASSROOM
     # matrix = [
@@ -329,4 +345,6 @@ if __name__ == '__main__':
         else:
             obj.resultString += f"Failed to solve: {result}" + "\n"
             print(f"Failed to solve: {result}")
+
+    print(obj.get_matrix_parsed())
 
