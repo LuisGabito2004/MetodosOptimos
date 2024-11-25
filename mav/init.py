@@ -20,6 +20,7 @@ class MAV:
         self.columnsIgnored = []
         self.rowsIgnored = []
         self.penaltiesRow, self.penaltiesColumn = self.calc_penalties()
+        self.resultString = ""
 
     def calc_penalties(self) -> Tuple[List[int], List[int]]:
         penaltiesRow = [0] * self.origin
@@ -87,8 +88,9 @@ class MAV:
                     cost += col[0]*col[1]
                     formula += f"{col[0]}*{col[1]}+"
 
-        formula = "\nCost: " + formula[:-1] + "="
-        print(formula, cost)
+        formula = "\nCost: " + formula[:-1] + " = " + f"{cost}"
+        self.resultString += formula
+        print(formula)
 
 
     def is_feasible(self) -> Tuple[bool, str]:
@@ -126,31 +128,46 @@ class MAV:
 
     def print_tableau(self):
        # Print the table header
-       print("{:^{width}}".format("Destinos", width=self.destination * 10 + 10))
+       self.resultString += "{:^{width}}".format("Destinations", width=self.destination * 10 + 10) + "\n"
+       print("{:^{width}}".format("", width=self.destination * 10 + 10))
+       self.resultString += "Origin" + "\t"
        print("Origin", end="\t")
        for i in range(1, self.destination + 1):
+           self.resultString += f"{i}" + "\t"
            print(f"{i}", end="\t")
+       self.resultString += "Offer" + "\t"
        print("Offer", end="\t")
+       self.resultString += "Pen" + "\n"
        print("Pen")
 
        # Print the table rows
        for i in range(self.origin):
+           self.resultString += f"{i + 1}" + "\t"
            print(i + 1, end="\t")
            for j in range(self.destination):
+               self.resultString += f"{self.matrix[i][j][0]}﹂{self.matrix[i][j][1]}" + "\t"
                print(f"{self.matrix[i][j][0]}﹂{self.matrix[i][j][1]}", end="\t")
+           self.resultString += f"{self.offer[i]}" + "\t"
            print(self.offer[i], end="\t")
+           self.resultString += f"{self.penaltiesRow[i]}" + "\n"
            print(self.penaltiesRow[i])
 
        # Print the table footer
+       self.resultString += "Demand" + "\t"
        print("Demand", end="\t")
        for i in range(self.destination):
+           self.resultString += f"{self.demand[i]}" + "\t"
            print(self.demand[i], end="\t")
+       self.resultString += "\n"
        print()
 
        # Print the Penalties footer
+       self.resultString += "Pen" + "\t"
        print("Pen", end="\t")
        for i in range(self.destination):
+           self.resultString += f"{self.penaltiesColumn[i]}" + "\t"
            print(self.penaltiesColumn[i], end="\t")
+       self.resultString += "\n"
        print()
 
     def solve_vogel(self):
@@ -170,8 +187,10 @@ class MAV:
                     if self.find_last_allocation():
                         self.penaltiesRow = [-1] * self.origin
                         self.penaltiesColumn = [-1] * self.destination
+                        self.resultString += f"Iteration {iteration}" + "\n"
                         print(f"Iteration {iteration}")
                         self.print_tableau()
+                        self.resultString += "\n"
                         print("\n")
                 break
 
@@ -232,8 +251,11 @@ class MAV:
                     self.columnsIgnored.append(col_index)
 
             self.penaltiesRow, self.penaltiesColumn = self.calc_penalties()
+            
+            self.resultString += f"Iteration {iteration}" + "\n"
             print(f"Iteration {iteration}")
             self.print_tableau()
+            self.resultString += "\n"
             print("\n")
 
         return self.matrix
@@ -286,19 +308,25 @@ if __name__ == '__main__':
     demand = [6000, 4000, 2000, 1500]
 
     obj = MAV(row, column, matrix, offer, demand)
+    obj.resultString = "Initial Tableu"
     print("Initial Tableu")
     obj.print_tableau()
+    obj.resultString += "\n"
     print()
     
     is_feasible, message = obj.is_feasible()
+    obj.resultString += f"Feasibility check: {message}" + "\n"
     print(f"Feasibility check: {message}")
+    obj.resultString += "\n"
     print("\n")
     if is_feasible:
         success, result = obj.solve()
         if success:
+            obj.resultString += "Solution found!" + "\n"
             print("Solution found!")
             obj.print_tableau()
             obj.calc_cost()
         else:
+            obj.resultString += f"Failed to solve: {result}" + "\n"
             print(f"Failed to solve: {result}")
 

@@ -5,7 +5,7 @@ from tkinter import scrolledtext
 from PIL import Image, ImageTk
 from NWCM import NWCM
 from costominimo import ejecutar_metodo_costo_minimo
-
+from mav.init import MAV
 #from metodos import MetodoEsquinaNoroeste, MetodoAproximacionVogel, MetodoCostoMinimo 
 
 def create_table(rows, cols, metodo):
@@ -71,7 +71,25 @@ def create_table(rows, cols, metodo):
                     show_final(result)
                 elif metodo == "Metodo por Aproximación de Vogel":
                     # Implementar lógica para Aproximación de Vogel si existe
-                    pass
+                    row, col = cost_matrix.__len__(), cost_matrix[0].__len__()
+                    mav = MAV(row, col, cost_matrix, supply, demand)
+                    mav.resultString = "Initial Tableu"
+                    mav.print_tableau()
+                    mav.resultString += "\n"
+
+                    is_feasible, message = mav.is_feasible()
+                    mav.resultString += f"Feasibility check: {message}" + "\n"
+                    mav.resultString += "\n"
+                    if is_feasible:
+                        success, result = mav.solve()
+                        if success:
+                            mav.resultString += "Solution found!" + "\n"
+                            mav.print_tableau()
+                            mav.calc_cost()
+                        else:
+                            mav.resultString += f"Failed to solve: {result}" + "\n"
+
+                    show_final(mav.resultString)
                 elif metodo == "Metodo del Costo Minimo":
                     ejecutar_metodo_costo_minimo(datos, menu_inicio)  # Llama al método desde costominimo.py
             except Exception as e:
