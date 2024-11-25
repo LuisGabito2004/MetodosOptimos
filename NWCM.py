@@ -128,3 +128,7 @@ class NWCM:
     def get_result(self):
         # Return all tableaus and the result as a single string
         return "\n".join(self.tableau_strings)
+    
+    def get_ToOptimize(self):
+        #return final answers
+        return self.final_demand, self.final_supply, self.allocation
