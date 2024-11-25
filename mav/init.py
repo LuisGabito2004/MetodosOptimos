@@ -86,9 +86,9 @@ class MAV:
             for col in row:
                 if col[0] != 0:
                     cost += col[0]*col[1]
-                    formula += f"{col[0]}*{col[1]}+"
+                    formula += f"{col[0]}*{col[1]} + "
 
-        formula = "\nCost: " + formula[:-1] + " = " + f"{cost}"
+        formula = "\nCost: " + formula[:-3] + " = " + f"{cost}"
         self.resultString += formula
         print(formula)
 
@@ -146,7 +146,7 @@ class MAV:
            print(i + 1, end="\t")
            for j in range(self.destination):
                self.resultString += f"{self.matrix[i][j][0]}﹂{self.matrix[i][j][1]}" + "\t"
-               print(f"{self.matrix[i][j][0]}﹂{self.matrix[i][j][1]}", end="\t")
+               print(f"{self.matrix[i][j][0]}({self.matrix[i][j][1]})", end="\t")
            self.resultString += f"{self.offer[i]}" + "\t"
            print(self.offer[i], end="\t")
            self.resultString += f"{self.penaltiesRow[i]}" + "\n"
