@@ -5,6 +5,8 @@ from tkinter import scrolledtext
 from PIL import Image, ImageTk
 from NWCM import NWCM
 from costominimo import ejecutar_metodo_costo_minimo
+from mav.init import MAV
+#from metodos import MetodoEsquinaNoroeste, MetodoAproximacionVogel, MetodoCostoMinimo 
 
 def create_table(rows, cols, metodo):
     def show_table():
@@ -25,6 +27,22 @@ def create_table(rows, cols, metodo):
                 row_entries.append(entry)
             entries.append(row_entries)
     
+        
+        # Añadir labels de "Demanda" y números de fila
+        for r in range(rows):
+            label = tk.Label(frame, text=str(r), bg='white')
+            label.grid(row=r, column=0)  # Ajustar la posición de los labels de fila
+        
+        demanda_label = tk.Label(frame, text="Demanda", bg='white')
+        demanda_label.grid(row=rows, column=0)  # Ajustar la posición del label "Demanda"
+
+        # Añadir labels de "Oferta" y números de columna
+        for c in range(cols):
+            label = tk.Label(frame, text=str(c), bg='white')
+            label.grid(row=0, column=c)  # Ajustar la posición de los labels de columna
+        
+        oferta_label = tk.Label(frame, text="Oferta", bg='white')
+        oferta_label.grid(row=0, column=cols)  # Ajustar la posición del label "Oferta"
         
         # Añadir labels de "Demanda" y números de fila
         for r in range(rows):
@@ -79,7 +97,25 @@ def create_table(rows, cols, metodo):
                     show_final(result)
                 elif metodo == "Metodo por Aproximación de Vogel":
                     # Implementar lógica para Aproximación de Vogel si existe
-                    pass
+                    row, col = cost_matrix.__len__(), cost_matrix[0].__len__()
+                    mav = MAV(row, col, cost_matrix, supply, demand)
+                    mav.resultString = "Initial Tableu"
+                    mav.print_tableau()
+                    mav.resultString += "\n"
+
+                    is_feasible, message = mav.is_feasible()
+                    mav.resultString += f"Feasibility check: {message}" + "\n"
+                    mav.resultString += "\n"
+                    if is_feasible:
+                        success, result = mav.solve()
+                        if success:
+                            mav.resultString += "Solution found!" + "\n"
+                            mav.print_tableau()
+                            mav.calc_cost()
+                        else:
+                            mav.resultString += f"Failed to solve: {result}" + "\n"
+
+                    show_final(mav.resultString)
                 elif metodo == "Metodo del Costo Minimo":
                     ejecutar_metodo_costo_minimo(datos, menu_inicio)  # Llama al método desde costominimo.py
             except Exception as e:
