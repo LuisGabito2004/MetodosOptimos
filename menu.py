@@ -6,8 +6,6 @@ from PIL import Image, ImageTk
 from NWCM import NWCM
 from costominimo import ejecutar_metodo_costo_minimo
 
-#from metodos import MetodoEsquinaNoroeste, MetodoAproximacionVogel, MetodoCostoMinimo 
-
 def create_table(rows, cols, metodo):
     def show_table():
         for widget in root.winfo_children():
@@ -22,8 +20,11 @@ def create_table(rows, cols, metodo):
             for c in range(cols):
                 entry = tk.Entry(frame)
                 entry.grid(row=r+1, column=c+1)  # Ajustar la posición de las entradas
+                if r == rows - 1 and c == cols - 1:
+                    entry.config(state='disabled')  # Deshabilitar la última celda de la última fila
                 row_entries.append(entry)
             entries.append(row_entries)
+    
         
         # Añadir labels de "Demanda" y números de fila
         for r in range(rows):
@@ -46,20 +47,27 @@ def create_table(rows, cols, metodo):
             for row_entries in entries:
                 row_data = []
                 for entry in row_entries:
-                    value = entry.get()
-                    try:
-                        value = float(value)
-                        if value < 0:
-                            raise ValueError("Negative value")
-                    except ValueError:
-                        messagebox.showerror("Error", "Valor no válido")
-                        return None
-                    row_data.append(value)
+                    if entry is not None:  # Verificar que entry no sea None
+                        value = entry.get()
+                        if value == "":  # Asignar 0 a celdas vacías
+                            value = 0
+                        try:
+                            value = float(value)
+                            if value < 0:
+                                raise ValueError("Negative value")
+                        except ValueError:
+                            messagebox.showerror("Error", "Valor no válido")
+                            return None
+                        row_data.append(value)
+                    else:
+                        row_data.append(None)  # Añadir None para mantener la estructura
                 data.append(row_data)
             return data
+
         
         def siguiente():
             datos = get_data()  # Matriz completa
+            print(datos)
             try:
                 # Lógica de procesamiento común
                 demand = [int(x) for x in datos[-1][:-1]]
@@ -77,7 +85,7 @@ def create_table(rows, cols, metodo):
             except Exception as e:
                 messagebox.showerror("Error", f"Ha ocurrido un error: {e}")
 
-        button = tk.Button(frame, text="Siguiente", command=siguiente)
+        button = tk.Button(frame,pady=5 ,text="Siguiente", font=("Arial", 12), bg="#2196F3", fg='white', width=30, bd=0, command=siguiente)
         button.grid(row=rows+2, columnspan=cols+2)
 
     return show_table
@@ -86,35 +94,50 @@ def show_final(resultado):
     for widget in root.winfo_children():
         widget.destroy()
 
-    # Create a container frame
+    # Crear un contenedor
     container = tk.Frame(root, bg='white')
-    container.place(relx=0.5, rely=0.5, anchor=tk.CENTER, relwidth=0.8, relheight=0.8)
+    container.pack(fill="both", expand=True)
 
-    # Create a canvas and a scrollbar for scrolling
+    # Canvas y Scroll
     canvas = tk.Canvas(container, bg='white')
     scrollbar = tk.Scrollbar(container, orient="vertical", command=canvas.yview)
     canvas.configure(yscrollcommand=scrollbar.set)
 
-    # Create a frame inside the canvas to hold content
+    # crear frame 
     content_frame = tk.Frame(canvas, bg='white')
     canvas.create_window((0, 0), window=content_frame, anchor="nw")
 
-    # Pack the canvas and scrollbar
+    content_frame.update_idletasks()
+    canvas.config(scrollregion=canvas.bbox("all"))
+    content_frame.config(width=canvas.winfo_width(), height=canvas.winfo_height() * 2)
     canvas.pack(side="left", fill="both", expand=True)
     scrollbar.pack(side="right", fill="y")
 
-    # Add content to the content_frame
-    lines = resultado.split("\n")  # Split the result into lines
-    for line in lines:
-        label = tk.Label(content_frame, text=line, font=("Courier New", 12), bg='white', justify="center")
-        label.pack(anchor="w", padx=20)  # Left-aligned for uniformity
+    # Crear un widget Text para mostrar el contenido
+    text_widget = tk.Text(content_frame, font=("Helvetica", 12), bg='white', wrap="none")
+    text_widget.pack(fill="both", expand=True)
 
-    # Add the back button at the bottom
-    button = tk.Button(content_frame, text="Back", width=20, command=menu_inicio)
+     # Configurar las tabulaciones del widget Text
+    tab_width = 4  # Ajusta este valor según sea necesario
+    text_widget.config(tabs=(tab_width * 10,))
+
+    # Añadir el resultado al widget Text
+    text_widget.insert(tk.END, resultado)
+    text_widget.config(state=tk.DISABLED)  # Hacer el widget de solo lectura
+
+    # Boton de regresar
+    button = tk.Button(content_frame, text="Regresar", font=("Arial", 12), bg="#2196F3", fg='white', width=40, bd=0, command=menu_inicio)
     button.pack(pady=20)
 
     # Adjust the canvas scrollregion dynamically
     content_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+
+    # Enable mouse wheel scrolling
+    def on_mouse_wheel(event):
+        canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+
+    canvas.bind_all("<MouseWheel>", on_mouse_wheel)
+
 
 def show_inputs(metodo):
     for widget in root.winfo_children():
@@ -123,23 +146,27 @@ def show_inputs(metodo):
     frame = tk.Frame(root, bg='white')
     frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
     
-    label1 = tk.Label(frame, text="Number of columns:", bg='white')
-    label1.grid(row=0, column=0)
-    entry1 = tk.Entry(frame)
-    entry1.grid(row=0, column=1)
+    label_font = ("Helvetica", 16)
+    entry_font = ("Helvetica", 16)
+    button_font = ("Helvetica", 16)
     
-    label2 = tk.Label(frame, text="Number of rows:", bg='white')
-    label2.grid(row=1, column=0)
-    entry2 = tk.Entry(frame)
-    entry2.grid(row=1, column=1)
+    label1 = tk.Label(frame, text="Número de Columnas:", font=label_font, bg='white')
+    label1.grid(row=0, column=0, padx=10, pady=10)
+    entry1 = tk.Entry(frame, font=entry_font, width=10)
+    entry1.grid(row=0, column=1, padx=10, pady=10)
+    
+    label2 = tk.Label(frame, text="Número de Filas:", font=label_font, bg='white')
+    label2.grid(row=1, column=0, padx=10, pady=10)
+    entry2 = tk.Entry(frame, font=entry_font, width=10)
+    entry2.grid(row=1, column=1, padx=10, pady=10)
     
     def generate_table():
         cols = int(entry1.get())
         rows = int(entry2.get())
         create_table(rows, cols, metodo)()
     
-    button = tk.Button(frame, text="Generar Tabla del problema", bg="#2196F3", width=20, command=generate_table)
-    button.grid(row=2, columnspan=2)
+    button = tk.Button(frame,pady=5 ,text="Generar Tabla del problema", font=button_font, bg="#2196F3", fg='white', width=40, command=generate_table, bd=0)
+    button.grid(row=2, columnspan=2, pady=20)
 
 root = tk.Tk()
 root.title("Main Window")
@@ -181,7 +208,6 @@ def menu_inicio():
 
 menu_inicio()
 root.mainloop()
-
 
 
 
