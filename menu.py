@@ -94,7 +94,7 @@ def create_table(rows, cols, metodo):
 
                 if metodo == "Metodo Esquina Noroeste":
                     result = NWCM(cost_matrix, supply, demand).get_result()
-                    show_final(result)
+                    show_final(result, metodo)
                 elif metodo == "Metodo por Aproximación de Vogel":
                     # Implementar lógica para Aproximación de Vogel si existe
                     row, col = cost_matrix.__len__(), cost_matrix[0].__len__()
@@ -115,7 +115,7 @@ def create_table(rows, cols, metodo):
                         else:
                             mav.resultString += f"Failed to solve: {result}" + "\n"
 
-                    show_final(mav.resultString)
+                    show_final(mav.resultString, metodo)
                 elif metodo == "Metodo del Costo Minimo":
                     ejecutar_metodo_costo_minimo(datos, menu_inicio)  # Llama al método desde costominimo.py
             except Exception as e:
@@ -126,7 +126,7 @@ def create_table(rows, cols, metodo):
 
     return show_table
 
-def show_final(resultado):
+def show_final(resultado, metodo):
     for widget in root.winfo_children():
         widget.destroy()
 
@@ -150,7 +150,7 @@ def show_final(resultado):
     scrollbar.pack(side="right", fill="y")
 
     # Crear un widget Text para mostrar el contenido
-    text_widget = tk.Text(content_frame, font=("Helvetica", 12), bg='white', wrap="none")
+    text_widget = tk.Text(content_frame, font=("Courier New", 12), bg='white', wrap="none")
     text_widget.pack(fill="both", expand=True)
 
      # Configurar las tabulaciones del widget Text
@@ -165,6 +165,12 @@ def show_final(resultado):
     button = tk.Button(content_frame, text="Regresar", font=("Arial", 12), bg="#2196F3", fg='white', width=40, bd=0, command=menu_inicio)
     button.pack(pady=20)
 
+    button1 = tk.Button(content_frame, text="Método Banquillo", font=("Arial", 12), bg="#4CAF50", fg='white', width=40, bd=0, command=lambda: ejecutar_metodoOptimo(metodo))
+    button1.pack(pady=10)
+
+    button2 = tk.Button(content_frame, text="Método DIMO", font=("Arial", 12), bg="#F44336", fg='white', width=40, bd=0, command=lambda: ejecutar_metodoOptimo(metodo))
+    button2.pack(pady=10)
+
     # Adjust the canvas scrollregion dynamically
     content_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
 
@@ -174,6 +180,14 @@ def show_final(resultado):
 
     canvas.bind_all("<MouseWheel>", on_mouse_wheel)
 
+
+def ejecutar_metodoOptimo(metodo):
+    print(metodo)
+    if metodo == "metodo1":
+        resultado = 0
+    elif metodo == "metodo2":
+        resultado = 0
+    show_final(resultado, metodo)
 
 def show_inputs(metodo):
     for widget in root.winfo_children():
