@@ -14,24 +14,25 @@ matrix_cost = []
 matrix_allocations = []
 num_allocations = 0
 
+# GENERA LA TABLA
 def create_table(rows, cols, metodo):
-    def show_table():
+    def show_table(): # MUESTRA LA TABLA 
         for widget in root.winfo_children():
             widget.destroy()
         
-        frame = tk.Frame(root, bg='white')
+        frame = tk.Frame(root, bg='white') # CREA EL FRAME DONDE SE VA A PONER EL CONTENIDO 
         frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
         
-        entries = []
-        for r in range(rows):
-            row_entries = []
-            for c in range(cols):
-                entry = tk.Entry(frame)
+        entries = [] # CELDAS
+        for r in range(rows): # CELDAS EN FILAS
+            row_entries = [] # GUARDA LAS FILAS
+            for c in range(cols): # CELDAS EN COLUMNAS
+                entry = tk.Entry(frame) 
                 entry.grid(row=r+1, column=c+1)  # Ajustar la posición de las entradas
                 if r == rows - 1 and c == cols - 1:
                     entry.config(state='disabled')  # Deshabilitar la última celda de la última fila
-                row_entries.append(entry)
-            entries.append(row_entries)
+                row_entries.append(entry) # PONER LAS CELDAS 
+            entries.append(row_entries) # LA TABLA CON LAS CELDAS
     
         
         # Añadir labels de "Demanda" y números de fila
@@ -66,17 +67,17 @@ def create_table(rows, cols, metodo):
         oferta_label = tk.Label(frame, text="Oferta", bg='white')
         oferta_label.grid(row=0, column=cols)  # Ajustar la posición del label "Oferta"
         
-        def get_data():
-            data = []
-            for row_entries in entries:
-                row_data = []
+        def get_data(): # OBTENER LOS DATOS INGRESADOS EN LA TABLA
+            data = [] # INFO
+            for row_entries in entries: 
+                row_data = [] # INFO DE LAS FILAS
                 for entry in row_entries:
                     if entry is not None:  # Verificar que entry no sea None
                         value = entry.get()
                         if value == "":  # Asignar 0 a celdas vacías
                             value = 0
                         try:
-                            value = float(value)
+                            value = float(value) # verificar que el numero ingresado no sea negativo
                             if value < 0:
                                 raise ValueError("Negative value")
                         except ValueError:
@@ -85,36 +86,36 @@ def create_table(rows, cols, metodo):
                         row_data.append(value)
                     else:
                         row_data.append(None)  # Añadir None para mantener la estructura
-                data.append(row_data)
+                data.append(row_data) #agregar los datos
             return data
 
         
         def siguiente():
-            # vairiables used for dimo method initialize as global to pass data trou the method
+            # variables usadas para inicializar globalmente y usarlas para el metodo DIMO
             global matrix_cost, matrix_allocations, num_allocations
 
             datos = get_data()  # Matriz completa
             print(datos)
             try:
                 # Lógica de procesamiento común
-                demand = [int(x) for x in datos[-1][:-1]]
-                supply = [int(row[-1]) for row in datos[:-1] if row]
-                cost_matrix = [[int(x) for x in row[:-1]] for row in datos[:-1]]
+                demand = [int(x) for x in datos[-1][:-1]] # demanda
+                supply = [int(row[-1]) for row in datos[:-1] if row] #oferta
+                cost_matrix = [[int(x) for x in row[:-1]] for row in datos[:-1]] # numero de la matriz
 
-                if metodo == "Metodo Esquina Noroeste":
-                    nwcm = NWCM(cost_matrix, supply, demand)
+                if metodo == "Metodo Esquina Noroeste": #prender este metodo si se presiono su boton
+                    nwcm = NWCM(cost_matrix, supply, demand) #llama a su funcion para resolver
                     result = nwcm.get_result()
                     matrix_allocations, matrix_cost, num_allocations = nwcm.get_ToOptimize()
                     show_final(result, metodo)
-                elif metodo == "Metodo por Aproximación de Vogel":
+                elif metodo == "Metodo por Aproximación de Vogel": #prender este metodo si se presiono su boton
                     # Implementar lógica para Aproximación de Vogel si existe
                     row, col = cost_matrix.__len__(), cost_matrix[0].__len__()
-                    mav = MAV(row, col, cost_matrix, supply, demand)
+                    mav = MAV(row, col, cost_matrix, supply, demand) #llama a su funcion para resolver
                     mav.resultString = "Initial Tableu"
-                    mav.print_tableau()
+                    mav.print_tableau() # pone los resultados
                     mav.resultString += "\n"
 
-                    is_feasible, message = mav.is_feasible()
+                    is_feasible, message = mav.is_feasible() 
                     mav.resultString += f"Feasibility check: {message}" + "\n"
                     mav.resultString += "\n"
                     if is_feasible:
@@ -128,8 +129,8 @@ def create_table(rows, cols, metodo):
 
                     matrix_allocations, matrix_cost, num_allocations = mav.get_matrix_parsed()
                     show_final(mav.resultString, metodo)
-                elif metodo == "Metodo del Costo Minimo":
-                    results, _ = metodo_costo_minimo_gui(supply, demand, cost_matrix)
+                elif metodo == "Metodo del Costo Minimo": #prender este metodo si se presiono su boton
+                    results, _ = metodo_costo_minimo_gui(supply, demand, cost_matrix) #llama a su funcion para resolver
                     matrix_allocations = results[-1][2].tolist()
                     matrix_cost = cost_matrix
                     num_allocations = sum(element != 0 for row in matrix_allocations for element in row)  
@@ -144,12 +145,12 @@ def create_table(rows, cols, metodo):
 
     return show_table
 
-def show_final(resultado, metodo):
+def show_final(resultado, metodo): # contenido en donde salen los resultados finales
     for widget in root.winfo_children():
         widget.destroy()
 
     # Crear un contenedor
-    container = tk.Frame(root, bg='white')
+    container = tk.Frame(root, bg='white') # contenedor donde sale el contenido
     container.pack(fill="both", expand=True)
 
     # Canvas y Scroll
@@ -161,6 +162,7 @@ def show_final(resultado, metodo):
     content_frame = tk.Frame(canvas, bg='white')
     canvas.create_window((0, 0), window=content_frame, anchor="nw")
 
+    # edicion del canvas y posiciones
     content_frame.update_idletasks()
     canvas.config(scrollregion=canvas.bbox("all"))
     content_frame.config(width=canvas.winfo_width(), height=canvas.winfo_height() * 2)
@@ -183,16 +185,17 @@ def show_final(resultado, metodo):
     button = tk.Button(content_frame, text="Regresar", font=("Arial", 12), bg="#2196F3", fg='white', width=40, bd=0, command=menu_inicio)
     button.pack(pady=20)
 
+    # botones para metodos de optimizacion
     button1 = tk.Button(content_frame, text="Método Banquillo", font=("Arial", 12), bg="#4CAF50", fg='white', width=40, bd=0, command=lambda: ejecutar_metodoOptimo(metodo))
     button1.pack(pady=10)
 
     button2 = tk.Button(content_frame, text="Método DIMO", font=("Arial", 12), bg="#F44336", fg='white', width=40, bd=0, command=lambda: ejecutar_metodoOptimo("dimo"))
     button2.pack(pady=10)
 
-    # Adjust the canvas scrollregion dynamically
+    # ajustar el canvas con el scroll
     content_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
 
-    # Enable mouse wheel scrolling
+    # deja que podamos scrollear
     def on_mouse_wheel(event):
         canvas.yview_scroll(int(-1*(event.delta/120)), "units")
 
@@ -200,7 +203,7 @@ def show_final(resultado, metodo):
 
 
 def ejecutar_metodoOptimo(metodo):
-    # vairiables used for dimo method initialize as global to pass data trou the method
+    # variables usadas para inicializar globalmente usando el metodo DIMo
     global matrix_cost, matrix_allocations, num_allocations
 
     print(metodo)
@@ -224,9 +227,10 @@ def ejecutar_metodoOptimo(metodo):
         show_final(resultado, metodo)
 
 def show_inputs(metodo):
-    for widget in root.winfo_children():
-        widget.destroy()
+    for widget in root.winfo_children(): # BORRA CACHÉ
+        widget.destroy() # BORRA ELEMENTOS ANTERIORES
     
+    # CREA FRAME DONDE SE AGREGAN LOS NUEVOS ELEMENTOS
     frame = tk.Frame(root, bg='white')
     frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
     
@@ -234,26 +238,30 @@ def show_inputs(metodo):
     entry_font = ("Helvetica", 16)
     button_font = ("Helvetica", 16)
     
+    # EMPIEZA A AGREGAR LOS ELEMENTOS
     label1 = tk.Label(frame, text="Número de Columnas:", font=label_font, bg='white')
     label1.grid(row=0, column=0, padx=10, pady=10)
     entry1 = tk.Entry(frame, font=entry_font, width=10)
     entry1.grid(row=0, column=1, padx=10, pady=10)
     
+    # INGRESA CUÁNTAS FILAS Y COLUMNAS SE REQUIERE
     label2 = tk.Label(frame, text="Número de Filas:", font=label_font, bg='white')
     label2.grid(row=1, column=0, padx=10, pady=10)
     entry2 = tk.Entry(frame, font=entry_font, width=10)
     entry2.grid(row=1, column=1, padx=10, pady=10)
     
+    #AGARRA LOS VALORES DE LAS COLUMNAS Y FILAS Y LLAMA A GENERAR LA TABLA
     def generate_table():
         cols = int(entry1.get())
         rows = int(entry2.get())
-        create_table(rows, cols, metodo)()
+        create_table(rows, cols, metodo)() # GENERAR TABLA
     
+    # BOTÓN QUE LLEVA A "generate_table"
     button = tk.Button(frame,pady=5 ,text="Generar Tabla del problema", font=button_font, bg="#2196F3", fg='white', width=40, command=generate_table, bd=0)
     button.grid(row=2, columnspan=2, pady=20)
 
-root = tk.Tk()
-root.title("Main Window")
+root = tk.Tk() # INICIA LA PANTALLA
+root.title("Main Window") 
 
 #tamaño de la ventana
 aspect_ratio = 16 / 9
@@ -261,9 +269,9 @@ width = 800
 height = int(width / aspect_ratio)
 root.geometry(f"{width}x{height}")
 
-def menu_inicio():
-    for widget in root.winfo_children():
-        widget.destroy()    
+def menu_inicio(): # INICIA EL MENÚ 
+    for widget in root.winfo_children(): # BORRA CACHÉ
+        widget.destroy() # ELIMINA ELEMENTOS ANTERIORES   
     
     # cargar imagen
     bg_image = Image.open("aaaaa.jpeg")
@@ -283,6 +291,7 @@ def menu_inicio():
     frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
     frame.lift()  # Trae el frame al frente de todo
 
+    # 3 BOTONES DE MÉTODOS INICIALES
     buttons_texts = ["Metodo Esquina Noroeste", "Metodo por Aproximación de Vogel", "Metodo del Costo Minimo"]
     
     for i in range(3):
