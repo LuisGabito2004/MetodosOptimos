@@ -7,7 +7,8 @@ from NWCM import NWCM
 from costominimo import ejecutar_metodo_costo_minimo, metodo_costo_minimo_gui, return_string_results
 from mav.init import MAV
 from dimo.init import DIMO
-#from metodos import MetodoEsquinaNoroeste, MetodoAproximacionVogel, MetodoCostoMinimo 
+from banquillo import getTotal as BanquilloTotal
+#from metodos import MetodoEsquinaNoroeste, MetodoAproximacionVogel, MetodoCostoMinimo
 
 # variables used for dimo method
 matrix_cost = []
@@ -39,7 +40,7 @@ def create_table(rows, cols, metodo):
         for r in range(rows):
             label = tk.Label(frame, text=str(r), bg='white')
             label.grid(row=r, column=0)  # Ajustar la posición de los labels de fila
-        
+
         demanda_label = tk.Label(frame, text="Demanda", bg='white')
         demanda_label.grid(row=rows, column=0)  # Ajustar la posición del label "Demanda"
 
@@ -47,15 +48,15 @@ def create_table(rows, cols, metodo):
         for c in range(cols):
             label = tk.Label(frame, text=str(c), bg='white')
             label.grid(row=0, column=c)  # Ajustar la posición de los labels de columna
-        
+
         oferta_label = tk.Label(frame, text="Oferta", bg='white')
         oferta_label.grid(row=0, column=cols)  # Ajustar la posición del label "Oferta"
-        
+
         # Añadir labels de "Demanda" y números de fila
         for r in range(rows):
             label = tk.Label(frame, text=str(r), bg='white')
             label.grid(row=r, column=0)  # Ajustar la posición de los labels de fila
-        
+
         demanda_label = tk.Label(frame, text="Demanda", bg='white')
         demanda_label.grid(row=rows, column=0)  # Ajustar la posición del label "Demanda"
 
@@ -63,7 +64,7 @@ def create_table(rows, cols, metodo):
         for c in range(cols):
             label = tk.Label(frame, text=str(c), bg='white')
             label.grid(row=0, column=c)  # Ajustar la posición de los labels de columna
-        
+
         oferta_label = tk.Label(frame, text="Oferta", bg='white')
         oferta_label.grid(row=0, column=cols)  # Ajustar la posición del label "Oferta"
         
@@ -89,10 +90,10 @@ def create_table(rows, cols, metodo):
                 data.append(row_data) #agregar los datos
             return data
 
-        
+
         def siguiente():
             # variables usadas para inicializar globalmente y usarlas para el metodo DIMO
-            global matrix_cost, matrix_allocations, num_allocations
+            global matrix_cost, matrix_allocations, num_allocations, demand, supply
 
             datos = get_data()  # Matriz completa
             print(datos)
@@ -133,7 +134,7 @@ def create_table(rows, cols, metodo):
                     results, _ = metodo_costo_minimo_gui(supply, demand, cost_matrix) #llama a su funcion para resolver
                     matrix_allocations = results[-1][2].tolist()
                     matrix_cost = cost_matrix
-                    num_allocations = sum(element != 0 for row in matrix_allocations for element in row)  
+                    num_allocations = sum(element != 0 for row in matrix_allocations for element in row)
 
                     string_results = ejecutar_metodo_costo_minimo(datos, menu_inicio)
                     show_final(string_results, metodo)
@@ -158,7 +159,7 @@ def show_final(resultado, metodo): # contenido en donde salen los resultados fin
     scrollbar = tk.Scrollbar(container, orient="vertical", command=canvas.yview)
     canvas.configure(yscrollcommand=scrollbar.set)
 
-    # crear frame 
+    # crear frame
     content_frame = tk.Frame(canvas, bg='white')
     canvas.create_window((0, 0), window=content_frame, anchor="nw")
 
@@ -185,8 +186,7 @@ def show_final(resultado, metodo): # contenido en donde salen los resultados fin
     button = tk.Button(content_frame, text="Regresar", font=("Arial", 12), bg="#2196F3", fg='white', width=40, bd=0, command=menu_inicio)
     button.pack(pady=20)
 
-    # botones para metodos de optimizacion
-    button1 = tk.Button(content_frame, text="Método Banquillo", font=("Arial", 12), bg="#4CAF50", fg='white', width=40, bd=0, command=lambda: ejecutar_metodoOptimo(metodo))
+    button1 = tk.Button(content_frame, text="Método Banquillo", font=("Arial", 12), bg="#4CAF50", fg='white', width=40, bd=0, command=lambda: ejecutar_metodoOptimo("banquillo"))
     button1.pack(pady=10)
 
     button2 = tk.Button(content_frame, text="Método DIMO", font=("Arial", 12), bg="#F44336", fg='white', width=40, bd=0, command=lambda: ejecutar_metodoOptimo("dimo"))
@@ -210,7 +210,7 @@ def ejecutar_metodoOptimo(metodo):
     if metodo == "dimo":
         dimo = DIMO(matrix_cost, matrix_allocations, num_allocations)
         optimal_allocation, optimal_cost = dimo.solve()
-        
+
         if optimal_allocation is not None:
             dimo.resultString += "\nFinal Optimal Allocation:" + "\n"
             print("\nFinal Optimal Allocation:")
@@ -222,9 +222,41 @@ def ejecutar_metodoOptimo(metodo):
 
         show_final(dimo.resultString, "")
 
-    elif metodo == "metodo2":
-        resultado = 0
-        show_final(resultado, metodo)
+    elif metodo == "banquillo":
+        if not matrix_allocations:
+            messagebox.showerror("Error", "No hay una tabla de asignaciones inicial válida. Ejecute primero un método de asignación inicial.")
+            return
+        total_cost, cosas = BanquilloTotal(matrix_cost, matrix_allocations, supply, demand)
+
+        resultado = f"Asignaciones: {matrix_allocations}\nCosto total: {total_cost}:\n\n"
+
+        width_col = 9
+        for i, row in enumerate(cosas):
+        # Add iteration header with centered formatting
+            resultado += f"{'='*30}\n"
+            resultado += f"{'Iteracion ' + str(i):^30}\n"
+            resultado += f"{'='*30}\n"
+            
+            # Process each subrow
+            for j, _row in enumerate(row[2]):
+                # Create a formatted line with controlled column width
+                line = ""
+                for val in _row:
+                    line += f"{str(val):^{width_col}}"
+                
+                # Add supply information at the end of the line
+                line += f"{str(supply[i]):^{width_col}}"
+                
+                resultado += line + "\n"
+            
+            # Add demand row
+            demand_line = ""
+            for val in demand:
+                demand_line += f"{str(val):^{width_col}}"
+            resultado += demand_line + "\n\n"
+
+
+        show_final(resultado, "Metodo Banquillo")
 
 def show_inputs(metodo):
     for widget in root.winfo_children(): # BORRA CACHÉ
@@ -233,7 +265,7 @@ def show_inputs(metodo):
     # CREA FRAME DONDE SE AGREGAN LOS NUEVOS ELEMENTOS
     frame = tk.Frame(root, bg='white')
     frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
-    
+
     label_font = ("Helvetica", 16)
     entry_font = ("Helvetica", 16)
     button_font = ("Helvetica", 16)
@@ -282,7 +314,6 @@ def menu_inicio(): # INICIA EL MENÚ
     bg_label = tk.Label(root, image=bg_photo)
     bg_label.image = bg_photo  # Keep a reference to avoid garbage collection
     bg_label.place(x=0, y=0, relwidth=1, relheight=1)
-
     # titulo en el centro
     title_label = tk.Label(root, text="Menú de Metodos", font=("Arial", 24), bg='white')
     title_label.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
@@ -293,7 +324,7 @@ def menu_inicio(): # INICIA EL MENÚ
 
     # 3 BOTONES DE MÉTODOS INICIALES
     buttons_texts = ["Metodo Esquina Noroeste", "Metodo por Aproximación de Vogel", "Metodo del Costo Minimo"]
-    
+
     for i in range(3):
         button = tk.Button(frame, text=buttons_texts[i], width=50, font=("Arial", 12), command=lambda i=i: show_inputs(buttons_texts[i]))
         button.lift()
@@ -301,7 +332,4 @@ def menu_inicio(): # INICIA EL MENÚ
 
 menu_inicio()
 root.mainloop()
-
-
-
 
