@@ -16,9 +16,9 @@ class DIMO:
         self.num_allocated = num_allocated
         self.num_rows = len(cost_matrix)
         self.num_cols = len(cost_matrix[0])
-        self.u_values: List[Optional[float]] = []
-        self.v_values: List[Optional[float]] = []
-        self.deltas: List[List[Optional[float]]] = []
+        self.u_values: List[Optional[float]] = []  # Potencial asociado a las filas de la matriz de costos
+        self.v_values: List[Optional[float]] = []  # Potencial asociado a las columnas de la matriz de costos
+        self.deltas: List[List[Optional[float]]] = []  # Cálcula que indica cuánto cambiaría el costo si se moviera una unidad
         self.iteration = 0
         self.resultString = ""
 
