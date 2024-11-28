@@ -227,15 +227,31 @@ def ejecutar_metodoOptimo(metodo):
         total_cost, cosas = BanquilloTotal(matrix_cost, matrix_allocations, supply, demand)
 
         resultado = f"Asignaciones: {matrix_allocations}\nCosto total: {total_cost}:\n\n"
+
+        width_col = 9
         for i, row in enumerate(cosas):
-            resultado += f"Iteracion {i}:\n"
+        # Add iteration header with centered formatting
+            resultado += f"{'='*30}\n"
+            resultado += f"{'Iteracion ' + str(i):^30}\n"
+            resultado += f"{'='*30}\n"
+            
+            # Process each subrow
             for j, _row in enumerate(row[2]):
+                # Create a formatted line with controlled column width
+                line = ""
                 for val in _row:
-                    resultado += f"{val}({row[3][i]})\t"
-                resultado += f"{supply[i]}\n"
+                    line += f"{str(val):^{width_col}}"
+                
+                # Add supply information at the end of the line
+                line += f"{str(supply[i]):^{width_col}}"
+                
+                resultado += line + "\n"
+            
+            # Add demand row
+            demand_line = ""
             for val in demand:
-                resultado += f"{val}\t"
-            resultado += f"\n\n"
+                demand_line += f"{str(val):^{width_col}}"
+            resultado += demand_line + "\n\n"
 
 
         show_final(resultado, "Metodo Banquillo")
@@ -308,3 +324,4 @@ def menu_inicio():
 
 menu_inicio()
 root.mainloop()
+
